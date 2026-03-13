@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.repository.ListCrudRepository;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.integration.amqp.dsl.Amqp;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.dsl.DirectChannelSpec;
@@ -30,6 +31,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.Collection;
+
+@Controller
+class DogAdoptionsGraphqlController {
+
+    private final DogAdoptionService dogAdoptionService;
+
+    DogAdoptionsGraphqlController(DogAdoptionService dogAdoptionService) {
+        this.dogAdoptionService = dogAdoptionService;
+    }
+
+    @QueryMapping
+    Collection<Dog> dogs() {
+        return dogAdoptionService.dogs();
+    }
+}
 
 @Configuration
 class IntegrationConfiguration {
