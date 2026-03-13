@@ -71,7 +71,7 @@
 
         <dependency>
             <groupId>org.springframework.modulith</groupId>
-            <artifactId>spring-modulith-events-amqp</artifactId>
+            <artifactId>spring-modulith-events-messaging</artifactId>
         </dependency>
 
         <dependency>

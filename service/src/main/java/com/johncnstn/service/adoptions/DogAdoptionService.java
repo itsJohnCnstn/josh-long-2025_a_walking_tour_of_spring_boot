@@ -1,8 +1,25 @@
 package com.johncnstn.service.adoptions;
 
+import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Exchange;
+import org.springframework.amqp.core.ExchangeBuilder;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.QueueBuilder;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.repository.ListCrudRepository;
+import org.springframework.integration.amqp.dsl.Amqp;
+import org.springframework.integration.channel.DirectChannel;
+import org.springframework.integration.dsl.DirectChannelSpec;
+import org.springframework.integration.dsl.IntegrationFlow;
+import org.springframework.integration.dsl.MessageChannelSpec;
+import org.springframework.integration.dsl.MessageChannels;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.stereotype.Controller;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +30,50 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.Collection;
+
+@Configuration
+class IntegrationConfiguration {
+
+    static final String ADOPTIONS_CHANNEL_NAME = "outboundAdoptionMessageChannel";
+
+    static final String ADOPTIONS_NAME = "adoptions";
+
+    @Bean
+    Queue adoptionsQueue() {
+        return QueueBuilder.durable(ADOPTIONS_NAME).build();
+    }
+
+    @Bean
+    Exchange adoptionsExchange() {
+        return ExchangeBuilder.directExchange(ADOPTIONS_NAME).build();
+    }
+
+    @Bean
+    Binding adoptionsBinding(Queue adoptionsQueue, Exchange adoptionsExchange) {
+        return BindingBuilder
+                .bind(adoptionsQueue)
+                .to(adoptionsExchange)
+                .with(ADOPTIONS_NAME)
+                .noargs();
+    }
+
+    @Bean(ADOPTIONS_CHANNEL_NAME)
+    MessageChannelSpec<DirectChannelSpec, DirectChannel> outboundAdoptionMessageChannel() {
+        return MessageChannels.direct();
+    }
+
+    @Bean
+    IntegrationFlow outboundAdoptionsIntegrationFlow(AmqpTemplate amqpTemplate,
+                                                     @Qualifier(ADOPTIONS_CHANNEL_NAME) MessageChannel messageChannel) {
+        return IntegrationFlow
+                .from(messageChannel)
+                .handle(Amqp.outboundAdapter(amqpTemplate)
+                        .routingKey(ADOPTIONS_NAME)
+                        .exchangeName(ADOPTIONS_NAME)
+                )
+                .get();
+    }
+}
 
 @Controller
 @ResponseBody
