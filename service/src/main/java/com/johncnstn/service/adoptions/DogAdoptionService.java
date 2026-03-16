@@ -1,5 +1,9 @@
 package com.johncnstn.service.adoptions;
 
+import com.google.protobuf.Empty;
+import com.johncnstn.service.adoptions.grpc.AdoptionsGrpc;
+import com.johncnstn.service.adoptions.grpc.DogsResponse;
+import io.grpc.stub.StreamObserver;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
@@ -32,6 +36,32 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.Collection;
 
+@Service
+class DogAdoptionsGrpcService extends AdoptionsGrpc.AdoptionsImplBase {
+
+    private final DogAdoptionService dogAdoptionService;
+
+    DogAdoptionsGrpcService(DogAdoptionService dogAdoptionService) {
+        this.dogAdoptionService = dogAdoptionService;
+    }
+
+    // grpcurl --plaintext localhost:8080 Adoptions.All
+    @Override
+    public void all(Empty request, StreamObserver<DogsResponse> responseObserver) {
+        var all = dogAdoptionService.dogs().stream().map(ogDog -> com.johncnstn.service.adoptions.grpc.Dog.newBuilder()
+                        .setId(ogDog.id())
+                        .setName(ogDog.name())
+                        .setDescription(ogDog.description())
+                        .build())
+                .toList();
+
+        var reply = DogsResponse.newBuilder().addAllDogs(all).build();
+
+        responseObserver.onNext(reply);
+        responseObserver.onCompleted();
+    }
+}
+
 @Controller
 class DogAdoptionsGraphqlController {
 
@@ -41,6 +71,7 @@ class DogAdoptionsGraphqlController {
         this.dogAdoptionService = dogAdoptionService;
     }
 
+    // http://localhost:8080/graphiql?path=/graphql
     @QueryMapping
     Collection<Dog> dogs() {
         return dogAdoptionService.dogs();
