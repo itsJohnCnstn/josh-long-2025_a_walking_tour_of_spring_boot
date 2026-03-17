@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.security.Principal;
 import java.util.Collection;
 
 @Service
@@ -186,4 +187,13 @@ record Dog(@Id int id, String name, String owner, String description) {
 }
 
 interface DogRepository extends ListCrudRepository<Dog, Integer> {
+}
+
+@Controller
+@ResponseBody
+class MeController {
+    @GetMapping("/me")
+    String me(Principal principal) {
+        return principal.getName();
+    }
 }
