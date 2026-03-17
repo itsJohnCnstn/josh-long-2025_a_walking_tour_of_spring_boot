@@ -136,17 +136,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.modulith</groupId>
-            <artifactId>spring-modulith-actuator</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.modulith</groupId>
             <artifactId>spring-modulith-events-amqp</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.modulith</groupId>
-            <artifactId>spring-modulith-observability</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -232,6 +222,36 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <profiles>
+        <!-- JVM run -->
+        <profile>
+            <id>JVM</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.modulith</groupId>
+                    <artifactId>spring-modulith-actuator</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.springframework.modulith</groupId>
+                    <artifactId>spring-modulith-observability</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <!-- Native build -->
+        <profile>
+            <id>native-app</id>
+            <!-- no modulith actuator / observability here -->
+        </profile>
+    </profiles>
 
     <build>
         <plugins>
